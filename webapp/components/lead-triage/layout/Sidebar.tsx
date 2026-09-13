@@ -46,7 +46,16 @@ export function Sidebar() {
 
       <div className="ltc-side-foot">
         <span className="ltc-side-foot-dot" aria-hidden />
-        <span className="ltc-side-foot-text">All systems operational</span>
+        <span className="ltc-side-foot-text">
+          <a
+            href="https://www.loom.com/share/3645cf220dc748ca809eda373ff8c8d5"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ltc-side-foot-link"
+          >
+            Watch demo
+          </a>
+        </span>
       </div>
     </aside>
   );

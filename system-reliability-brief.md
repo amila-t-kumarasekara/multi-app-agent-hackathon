@@ -1,5 +1,7 @@
 # System & Reliability Brief — Lead Triage
 
+**Demo video:** [Loom walkthrough](https://www.loom.com/share/3645cf220dc748ca809eda373ff8c8d5)
+
 ## Design thesis
 
 Most "AI agent" demos give one model every tool and hope the system prompt keeps it honest. This project takes the opposite approach: **each agent gets the minimum tool access it needs to do its one job, enforced in code — not in a prompt.**

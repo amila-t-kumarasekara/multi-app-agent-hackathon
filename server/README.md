@@ -3,6 +3,8 @@
 Five narrow agents behind a **deterministic** orchestrator. Least-privilege tool access enforced in code.
 Apps: Gmail · HubSpot (or Airtable) · Slack · Google Calendar.
 
+**Demo:** [Loom walkthrough](https://www.loom.com/share/3645cf220dc748ca809eda373ff8c8d5)
+
 ```
 Gmail ─> Router ─> Extractor ─> Critic ─> CRM agent ─> Slack approval ─> Scheduler ─> Calendar + Gmail
           (no tools) (no tools) (no tools)  (crm only)      (human)      (cal+send only)

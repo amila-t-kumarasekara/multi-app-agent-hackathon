@@ -4,10 +4,13 @@ An inbound-email lead triage system built on **five narrow AI agents behind one 
 
 Apps wired in: **Gmail** · **HubSpot** (or Airtable) · **Slack** · **Google Calendar** · **Gemini** (LLM).
 
+**Demo video:** [Loom walkthrough](https://www.loom.com/share/3645cf220dc748ca809eda373ff8c8d5)
+
 ---
 
 ## Table of contents
 
+- [Demo video](#demo-video)
 - [What this project is](#what-this-project-is)
 - [Architecture](#architecture)
 - [The five agents](#the-five-agents)
@@ -26,6 +29,12 @@ Apps wired in: **Gmail** · **HubSpot** (or Airtable) · **Slack** · **Google C
 - [Exposing Slack interactivity with ngrok](#exposing-slack-interactivity-with-ngrok)
 - [Useful endpoints](#useful-endpoints)
 - [Troubleshooting](#troubleshooting)
+
+---
+
+## Demo video
+
+End-to-end walkthrough (live run feed, Slack approval, CRM, calendar): [https://www.loom.com/share/3645cf220dc748ca809eda373ff8c8d5](https://www.loom.com/share/3645cf220dc748ca809eda373ff8c8d5)
 
 ---
 
