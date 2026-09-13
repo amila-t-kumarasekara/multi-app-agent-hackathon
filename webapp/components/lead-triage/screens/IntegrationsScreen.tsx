@@ -1,12 +1,21 @@
-import { INTEGRATIONS } from "../data/mockData";
+"use client";
+
+import { api, type ApiIntegration } from "@/lib/api";
+import type { IconName } from "../icons/iconPaths";
 import { Icon } from "../icons/Icon";
+import { useApiData } from "../hooks/useApiData";
 import { StatusTag } from "../ui/StatusTag";
 
 export function IntegrationsScreen() {
+  const { data: integrations, loading, error } = useApiData<ApiIntegration[]>(api.listIntegrations, 10000);
+
+  if (error) return <div className="ltc-listcard"><div className="ltc-empty">Couldn&apos;t load integrations: {error}</div></div>;
+  if (loading && !integrations) return <div className="ltc-listcard"><div className="ltc-empty">Loading integrations…</div></div>;
+
   return (
     <div className="ltc-listcard">
       <div className="ltc-rowlist">
-        {INTEGRATIONS.map((integration) => {
+        {(integrations ?? []).map((integration) => {
           const iconStyle =
             integration.status === "Connected"
               ? {
@@ -21,7 +30,7 @@ export function IntegrationsScreen() {
           return (
             <div key={integration.name} className="ltc-rowcard">
               <div className="ltc-inticon" style={iconStyle}>
-                <Icon name={integration.icon} size={18} />
+                <Icon name={integration.icon as IconName} size={18} />
               </div>
               <div className="ltc-runinfo ltc-runinfo-grow">
                 <div className="ltc-runname">{integration.name}</div>
@@ -32,7 +41,7 @@ export function IntegrationsScreen() {
                 tagClass={integration.statusClass}
               />
               <div className="ltc-actions">
-                <button type="button" className="btn btn-secondary">
+                <button type="button" className="btn btn-secondary" disabled>
                   {integration.actionLabel}
                 </button>
               </div>

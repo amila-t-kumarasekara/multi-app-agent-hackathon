@@ -1,12 +1,33 @@
-import { EVAL_CASES, EVAL_METRICS } from "../data/mockData";
+"use client";
+
+import { api, type ApiEvalSummary } from "@/lib/api";
+import { useApiData } from "../hooks/useApiData";
 import { StatCard } from "../ui/StatCard";
 import { StatusTag } from "../ui/StatusTag";
 
 export function EvalScreen() {
+  const { data, loading, error } = useApiData<ApiEvalSummary | null>(api.getEvalSummary, 10000);
+
+  if (error) {
+    return <div className="ltc-listcard"><div className="ltc-empty">Couldn&apos;t load eval results: {error}</div></div>;
+  }
+  if (loading && data === null) {
+    return <div className="ltc-listcard"><div className="ltc-empty">Loading eval results…</div></div>;
+  }
+  if (!data) {
+    return (
+      <div className="ltc-listcard">
+        <div className="ltc-empty">
+          No eval runs recorded yet. Run <code>python -m evals.run_evals</code> on the server to populate this screen.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="ltc-stats">
-        {EVAL_METRICS.map((metric) => (
+        {data.metrics.map((metric) => (
           <StatCard
             key={metric.label}
             label={metric.label}
@@ -29,7 +50,7 @@ export function EvalScreen() {
             </tr>
           </thead>
           <tbody>
-            {EVAL_CASES.map((testCase) => (
+            {data.cases.map((testCase) => (
               <tr key={testCase.name}>
                 <td>{testCase.name}</td>
                 <td className="text-muted">{testCase.category}</td>

@@ -8,15 +8,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { RUNS } from "../data/mockData";
 import type { RunFilter, ScreenId } from "../types";
 
 export type LeadTriageNavigation = {
   screen: ScreenId;
   filter: RunFilter;
+  selectedRunId: string | null;
   setScreen: (screen: ScreenId) => void;
   setFilter: (filter: RunFilter) => void;
-  openRunDetail: () => void;
+  openRunDetail: (runId: string) => void;
 };
 
 const LeadTriageNavigationContext =
@@ -29,12 +29,14 @@ export function LeadTriageNavigationProvider({
 }) {
   const [screen, setScreenState] = useState<ScreenId>("feed");
   const [filter, setFilter] = useState<RunFilter>("All runs");
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
   const setScreen = useCallback((next: ScreenId) => {
     setScreenState(next);
   }, []);
 
-  const openRunDetail = useCallback(() => {
+  const openRunDetail = useCallback((runId: string) => {
+    setSelectedRunId(runId);
     setScreenState("detail");
   }, []);
 
@@ -42,11 +44,12 @@ export function LeadTriageNavigationProvider({
     () => ({
       screen,
       filter,
+      selectedRunId,
       setScreen,
       setFilter,
       openRunDetail,
     }),
-    [screen, filter, setScreen, openRunDetail],
+    [screen, filter, selectedRunId, setScreen, openRunDetail],
   );
 
   return (
@@ -64,16 +67,4 @@ export function useLeadTriageNavigation(): LeadTriageNavigation {
     );
   }
   return ctx;
-}
-
-/** Filters runs for the live feed without coupling list UI to filter state shape. */
-export function useFilteredRuns() {
-  const { filter } = useLeadTriageNavigation();
-  return useMemo(
-    () =>
-      RUNS.filter(
-        (run) => filter === "All runs" || run.status === filter,
-      ),
-    [filter],
-  );
 }
