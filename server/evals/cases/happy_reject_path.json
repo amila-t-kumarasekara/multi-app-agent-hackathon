@@ -1,0 +1,20 @@
+{
+  "id": "happy_reject_path",
+  "bucket": "happy",
+  "email": {
+    "id": "e4",
+    "thread_id": "te4",
+    "from": "sam@quietfox.dev",
+    "subject": "Interested",
+    "body": "Curious about your product for a 5-person startup."
+  },
+  "expect": {
+    "final_state": "DONE",
+    "must_not_call": [
+      "create_calendar_event",
+      "send_email_reply"
+    ],
+    "emails_sent": 0
+  },
+  "approve": false
+}

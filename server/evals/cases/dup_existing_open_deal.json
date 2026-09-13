@@ -1,0 +1,29 @@
+{
+  "id": "dup_existing_open_deal",
+  "bucket": "duplicates",
+  "email": {
+    "id": "e6",
+    "thread_id": "te6",
+    "from": "priya@northwind.io",
+    "subject": "Re: Demo",
+    "body": "Any update on scheduling?"
+  },
+  "expect": {
+    "final_state": "DONE",
+    "must_not_call": [
+      "create_crm_contact",
+      "create_crm_deal"
+    ]
+  },
+  "app_state": {
+    "crm_contacts": [
+      {
+        "id": "c9",
+        "email": "priya@northwind.io",
+        "name": "Priya Nair",
+        "company": "Northwind",
+        "open_deal_id": "d1"
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "happy_clean_lead",
+  "bucket": "happy",
+  "email": {
+    "id": "e1",
+    "thread_id": "te1",
+    "from": "Priya Nair <priya@northwind.io>",
+    "subject": "Demo request",
+    "body": "Hi, I lead ops at Northwind. We're evaluating tools for our sales team of 40. Could we do a demo next week? Thanks, Priya"
+  },
+  "expect": {
+    "final_state": "DONE",
+    "must_call": [
+      "search_crm_contact",
+      "create_crm_contact",
+      "create_crm_deal",
+      "create_calendar_event",
+      "send_email_reply"
+    ],
+    "emails_sent": 1,
+    "router_verdict": "lead",
+    "extraction_fields": {
+      "email": "priya@northwind.io"
+    }
+  }
+}

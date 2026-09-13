@@ -1,0 +1,21 @@
+{
+  "id": "fail_crm_500",
+  "bucket": "failures",
+  "email": {
+    "id": "e18",
+    "thread_id": "te18",
+    "from": "ana@copperline.co",
+    "subject": "Demo",
+    "body": "Want a demo for my team of 12."
+  },
+  "expect": {
+    "final_state": "ESCALATED",
+    "must_not_call": [
+      "create_calendar_event"
+    ],
+    "emails_sent": 0
+  },
+  "faults": {
+    "crm": "500"
+  }
+}

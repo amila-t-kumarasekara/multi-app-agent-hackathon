@@ -1,0 +1,31 @@
+{
+  "id": "dup_fills_missing_company",
+  "bucket": "duplicates",
+  "email": {
+    "id": "e7",
+    "thread_id": "te7",
+    "from": "Lee Chen <lee@orbitalpay.com>",
+    "subject": "Demo",
+    "body": "I'm CTO at OrbitalPay, want a demo."
+  },
+  "expect": {
+    "final_state": "DONE",
+    "must_call": [
+      "update_crm_contact"
+    ],
+    "must_not_call": [
+      "create_crm_contact"
+    ]
+  },
+  "app_state": {
+    "crm_contacts": [
+      {
+        "id": "c3",
+        "email": "lee@orbitalpay.com",
+        "name": null,
+        "company": null,
+        "open_deal_id": null
+      }
+    ]
+  }
+}

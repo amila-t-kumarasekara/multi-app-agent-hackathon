@@ -1,0 +1,20 @@
+{
+  "id": "fail_gmail_send_after_booking",
+  "bucket": "failures",
+  "email": {
+    "id": "e21",
+    "thread_id": "te21",
+    "from": "omar@saltmarsh.io",
+    "subject": "Demo",
+    "body": "Book me a demo please."
+  },
+  "expect": {
+    "final_state": "ESCALATED",
+    "must_call": [
+      "create_calendar_event"
+    ]
+  },
+  "faults": {
+    "gmail_send": true
+  }
+}

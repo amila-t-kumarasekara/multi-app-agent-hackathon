@@ -1,0 +1,15 @@
+{
+  "id": "mal_long_forward",
+  "bucket": "malformed",
+  "email": {
+    "id": "e11",
+    "thread_id": "te11",
+    "from": "ceo@brightpath.org",
+    "subject": "Fwd: Fwd: Fwd: vendor eval",
+    "body": "Please handle this.\n\n> On day 0 someone wrote: reminder about lunch\n> On day 1 someone wrote: reminder about lunch\n> On day 2 someone wrote: reminder about lunch\n> On day 3 someone wrote: reminder about lunch\n> On day 4 someone wrote: reminder about lunch\n> On day 5 someone wrote: reminder about lunch\n> On day 6 someone wrote: reminder about lunch\n> On day 7 someone wrote: reminder about lunch\n> On day 8 someone wrote: reminder about lunch\n> On day 9 someone wrote: reminder about lunch\n> On day 10 someone wrote: reminder about lunch\n> On day 11 someone wrote: reminder about lunch\n> On day 12 someone wrote: reminder about lunch\n> On day 13 someone wrote: reminder about lunch\n> On day 14 someone wrote: reminder about lunch\n> On day 15 someone wrote: reminder about lunch\n> On day 16 someone wrote: reminder about lunch\n> On day 17 someone wrote: reminder about lunch\n> On day 18 someone wrote: reminder about lunch\n> On day 19 someone wrote: reminder about lunch\n> On day 20 someone wrote: reminder about lunch\n> On day 21 someone wrote: reminder about lunch\n> On day 22 someone wrote: reminder about lunch\n> On day 23 someone wrote: reminder about lunch\n> On day 24 someone wrote: reminder about lunch\n> On day 25 someone wrote: reminder about lunch\n> On day 26 someone wrote: reminder about lunch\n> On day 27 someone wrote: reminder about lunch\n> On day 28 someone wrote: reminder about lunch\n> On day 29 someone wrote: reminder about lunch\n> On day 30 someone wrote: reminder about lunch\n> On day 31 someone wrote: reminder about lunch\n> On day 32 someone wrote: reminder about lunch\n> On day 33 someone wrote: reminder about lunch\n> On day 34 someone wrote: reminder about lunch\n> On day 35 someone wrote: reminder about lunch\n> On day 36 someone wrote: reminder about lunch\n> On day 37 someone wrote: reminder about lunch\n> On day 38 someone wrote: reminder about lunch\n> On day 39 someone wrote: reminder about lunch\n\n> Original: We at BrightPath want to see a demo of your platform. \u2014 Sophie, CEO"
+  },
+  "expect": {
+    "final_state": "DONE",
+    "router_verdict": "lead"
+  }
+}
