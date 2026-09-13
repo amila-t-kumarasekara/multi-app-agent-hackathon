@@ -12,7 +12,7 @@ Gmail ─> Router ─> Extractor ─> Critic ─> CRM agent ─> Slack approval 
 
 ```bash
 pip install -r requirements.txt
-cp .env.example .env            # fill ANTHROPIC_API_KEY first, everything else later
+cp .env.example .env            # fill GEMINI_API_KEY first, everything else later
 
 python tests_smoke.py           # 0 tokens: orchestration, registry, idempotency, retry, dry-run
 python -m evals.run_evals       # fakes + real LLM: 25 cases, prints pass table
@@ -26,8 +26,8 @@ POLL=1 USE_FAKES=0 uvicorn server:app --port 8000
 
 ## Step-by-step build / wiring
 
-1. **Anthropic key** in `.env`. Run `tests_smoke.py` (no key needed) then `evals` (key needed). Fix prompts until ≥ 20/25.
-2. **Google** — Cloud console → OAuth client (Desktop) → download `credentials.json`. Enable Gmail + Calendar APIs. Add your test account as a test user. First `USE_FAKES=0` run opens the consent screen once; `token.json` persists.
+1. **Gemini key** (`GEMINI_API_KEY`) in `.env`. Run `tests_smoke.py` (no key needed) then `evals` (key needed). Fix prompts until ≥ 20/25.
+2. **Google** — Cloud console → **OAuth client (Desktop app, not service account)** → download JSON as `server/credentials.json` (must contain an `"installed"` key). Enable Gmail + Calendar APIs. Add your test account as a test user. First `USE_FAKES=0` run opens the consent screen once; `token.json` persists.
 3. **HubSpot** — Settings → Integrations → Private apps → scopes `crm.objects.contacts.read/write`, `crm.objects.deals.read/write` → token into `HUBSPOT_TOKEN`. If it fights you for >30 min: `CRM_PROVIDER=airtable`, base with tables `Contacts(Email,Name,Company,Deals)` and `Deals(Title,Contact,Stage)`.
 4. **Slack** — api.slack.com → new app → Bot scopes `chat:write` → install → `SLACK_BOT_TOKEN`, channel ID, signing secret. Interactivity → Request URL = ngrok URL + `/slack/interact`. Invite the bot to the channel.
 5. **Live round trip** — `curl -X POST localhost:8000/ingest -H 'content-type: application/json' -d @evals/cases/happy_clean_lead.json` (send just the `email` object). Click Approve in Slack. Check calendar + inbox.

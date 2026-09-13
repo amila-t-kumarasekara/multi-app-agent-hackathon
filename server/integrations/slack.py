@@ -4,7 +4,7 @@ from tools.executor import TransientError
 class SlackLive:
     def __init__(self, token=None, channel=None):
         self.h = {"Authorization": f"Bearer {token or os.environ['SLACK_BOT_TOKEN']}"}
-        self.channel = channel or os.environ["SLACK_CHANNEL"]
+        self.channel = channel or os.environ.get("SLACK_CHANNEL") or os.environ["SLACK_CHANNEL_ID"]
     def _post(self, payload):
         r = requests.post("https://slack.com/api/chat.postMessage", headers=self.h, json=payload, timeout=5)
         if r.status_code in (429, 500, 502, 503): raise TransientError(f"slack {r.status_code}")
