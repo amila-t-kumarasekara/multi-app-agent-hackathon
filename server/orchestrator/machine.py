@@ -103,6 +103,58 @@ class Orchestrator:
         self._advance(ctx, "ok" if s.get("status") == "ok" else "error")
         return self._finish(ctx, s.get("summary") or s.get("reason"))
 
+    # ---- entry point 3: escalation / quarantine queue -----------------------
+    def handle_escalation_review(self, run_id, decision: str) -> dict:
+        run = self.db.get_run(run_id)
+        if not run:
+            return {"error": "unknown run"}
+        ctx = run["context"]
+        if ctx["state"] not in (State.ESCALATED.value, State.QUARANTINED.value):
+            return {"skipped": f"run in state {ctx['state']}"}
+        if decision == "reject":
+            ctx["state"] = State.DONE.value
+            ctx["history"].append(State.DONE.value)
+            return self._finish(ctx, "dismissed by human")
+        return self._resume_after_human_review(ctx)
+
+    def _resume_after_human_review(self, ctx):
+        """Human approved an escalated/quarantined run — continue (or retry) the pipeline."""
+        email_text = (
+            f"From: {ctx['email']['from']}\nSubject: {ctx['email']['subject']}\n\n{ctx['email']['body']}"
+        )
+        x = ctx.get("extraction")
+
+        if not x or x.get("status") != "ok" or not x.get("email"):
+            if ctx["state"] == State.ESCALATED.value and State.ROUTED.value not in ctx["history"]:
+                ctx["state"] = State.RECEIVED.value
+                ctx["route"] = ctx.get("route") or {"verdict": "lead", "reason": "human override"}
+                self._advance(ctx, "lead")
+            x = self._call(self.extractor, ctx, email_text)
+            ctx["extraction"] = x
+            self._advance(ctx, "ok" if x.get("status") == "ok" and x.get("email") else "error")
+            if ctx["state"] in TERMINAL:
+                return self._finish(ctx, "extraction failed after human review")
+
+        x = ctx["extraction"]
+
+        if ctx["state"] in (State.ESCALATED.value, State.QUARANTINED.value, State.EXTRACTED.value):
+            ctx["state"] = State.CRITIQUED.value
+            if not ctx["history"] or ctx["history"][-1] != State.CRITIQUED.value:
+                ctx["history"].append(State.CRITIQUED.value)
+
+        k = self._call(self.crm, ctx, f"LEAD:\n{json.dumps(x)}")
+        ctx["crm"] = k
+        self._advance(ctx, "ok" if k.get("status") == "ok" else "error")
+        if ctx["state"] in TERMINAL:
+            return self._finish(ctx, f"crm: {k.get('reason')}")
+
+        self._slack(ctx, "post_slack_approval", {
+            "run_id": ctx["run_id"], "lead": x, "crm": k,
+            "confidence": (ctx.get("critique") or {}).get("confidence")})
+        self._advance(ctx, "ok")
+        self.db.update_run(ctx["run_id"], ctx["state"], ctx)
+        return ctx
+
     def _finish(self, ctx, note):
         ctx["note"] = note
         self.db.update_run(ctx["run_id"], ctx["state"], ctx)

@@ -17,6 +17,9 @@ HUBSPOT_DEAL_SCOPES = ("crm.objects.deals.read", "crm.objects.deals.write")
 
 
 def hubspot_token_scopes(token):
+    """OAuth access-token introspection; returns None for private app tokens (pat-…)."""
+    if not token or token.startswith("pat-"):
+        return None
     r = requests.get(f"https://api.hubapi.com/oauth/v1/access-tokens/{token}", timeout=10)
     if not r.ok:
         return None
@@ -34,16 +37,22 @@ class HubSpotCRM:
         self._deal_defaults = None
 
     def _scope_hint(self):
-        scopes = hubspot_token_scopes(self.token) or []
-        missing = [s for s in HUBSPOT_DEAL_SCOPES if s not in scopes]
-        if missing:
+        scopes = hubspot_token_scopes(self.token)
+        if scopes is not None:
+            missing = [s for s in HUBSPOT_DEAL_SCOPES if s not in scopes]
+            if missing:
+                return (
+                    f"Token is missing scopes: {', '.join(missing)}. "
+                    "In HubSpot: Private app → Scopes → save → Regenerate token → update HUBSPOT_TOKEN → restart uvicorn."
+                )
             return (
-                f"Token is missing scopes: {', '.join(missing)}. "
-                "In HubSpot: Private app → Scopes → save → Regenerate token → update HUBSPOT_TOKEN → restart uvicorn."
+                f"Token has deals scopes but HubSpot still returned 403 "
+                f"(check Sales/Deals enabled on portal). Scopes: {', '.join(scopes[:12])}…"
             )
-        if scopes:
-            return f"Token has deals scopes but HubSpot still returned 403 (check Sales/Deals enabled on portal). Scopes: {', '.join(scopes[:12])}…"
-        return "Regenerate the private app token after enabling deals scopes."
+        return (
+            "HubSpot returned 403 on deals — enable crm.objects.deals.read/write on the private app, "
+            "regenerate the token, update HUBSPOT_TOKEN, and restart uvicorn."
+        )
 
     def _deal_pipeline_and_stage(self):
         if self._deal_defaults:

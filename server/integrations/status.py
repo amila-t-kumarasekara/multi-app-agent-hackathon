@@ -99,23 +99,43 @@ def _crm_status(crm):
         portal = j.get("portalId", "?")
         company = j.get("companyName") or j.get("accountType") or "HubSpot"
         account = f"{company} · portal {portal}"
-        scopes = hubspot_token_scopes(token) or []
-        missing_deals = [s for s in HUBSPOT_DEAL_SCOPES if s not in scopes]
-        pipe_r = requests.get(HubSpotCRM.PIPELINES, headers={"Authorization": f"Bearer {token}"}, timeout=10)
+        scopes = hubspot_token_scopes(token)
+        missing_deals = (
+            [s for s in HUBSPOT_DEAL_SCOPES if s not in scopes]
+            if scopes is not None
+            else []
+        )
+        try:
+            pipe_r = requests.get(
+                HubSpotCRM.PIPELINES,
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=10,
+            )
+        except requests.RequestException as e:
+            detail = (
+                f"Portal {portal} · account verified · deals pipeline check failed ({e}). "
+                "Retry later or check outbound HTTPS to api.hubapi.com from this host."
+            )
+            return _item(label, "database", account, True, detail)
+        if pipe_r.ok:
+            n_pipes = len(pipe_r.json().get("results") or [])
+            detail = f"Portal {portal} · {n_pipes} deal pipeline(s) · tz {j.get('timeZone', '—')}"
+            if scopes is None:
+                detail += " · private app token (deals API verified)"
+            else:
+                detail = f"Portal {portal} · scopes include deals · {n_pipes} pipeline(s) · tz {j.get('timeZone', '—')}"
+            return _item(label, "database", account, True, detail)
         if missing_deals:
             detail = (
                 f"Portal {portal} · token missing scopes: {', '.join(missing_deals)}. "
                 "Private app → add scopes → Save → Regenerate token → paste new HUBSPOT_TOKEN → restart uvicorn."
             )
             return _item(label, "database", account, False, detail)
-        if not pipe_r.ok:
-            detail = (
-                f"Portal {portal} · deals pipelines HTTP {pipe_r.status_code} — "
-                f"regenerate token after scopes. {pipe_r.text[:100]}"
-            )
-            return _item(label, "database", account, False, detail)
-        detail = f"Portal {portal} · scopes include deals · {len(pipe_r.json().get('results') or [])} pipeline(s) · tz {j.get('timeZone', '—')}"
-        return _item(label, "database", account, True, detail)
+        detail = (
+            f"Portal {portal} · deals pipelines HTTP {pipe_r.status_code} — "
+            f"regenerate token after scopes. {pipe_r.text[:100]}"
+        )
+        return _item(label, "database", account, False, detail)
     if isinstance(crm, AirtableCRM):
         base = os.getenv("AIRTABLE_BASE", "")
         token = os.getenv("AIRTABLE_TOKEN", "").strip()

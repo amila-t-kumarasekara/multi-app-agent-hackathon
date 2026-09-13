@@ -125,4 +125,9 @@ export const api = {
   listIntegrations: () => apiFetch<ApiIntegration[]>("/integrations"),
   getEvalSummary: () => apiFetch<ApiEvalSummary | null>("/evals"),
   getStats: () => apiFetch<ApiStats>("/stats"),
+  decideRun: (runId: string, decision: "approve" | "reject") =>
+    apiPost<{ skipped?: string; error?: string; state?: string }>(
+      `/approve/${runId}/${decision}`,
+      {},
+    ),
 };

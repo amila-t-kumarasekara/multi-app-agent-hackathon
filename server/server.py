@@ -79,6 +79,14 @@ async def ingest_gmail(bg: BackgroundTasks):
 
 @app.post("/approve/{run_id}/{decision}")   # local shortcut when Slack isn't wired
 async def approve(run_id: str, decision: str):
+    if decision not in ("approve", "reject"):
+        raise HTTPException(400, "decision must be approve or reject")
+    run = db.get_run(run_id)
+    if not run:
+        raise HTTPException(404)
+    state = run["context"]["state"]
+    if state in ("ESCALATED", "QUARANTINED"):
+        return orch.handle_escalation_review(run_id, decision)
     return orch.handle_approval(run_id, decision)
 
 @app.get("/runs/{run_id}")
