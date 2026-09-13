@@ -94,8 +94,31 @@ export type ApiStats = {
   avgFirstActionS: number;
 };
 
+export type IngestEmail = {
+  id: string;
+  thread_id?: string;
+  from: string;
+  subject: string;
+  body: string;
+};
+
+async function apiPost<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    throw new Error(`${path} -> ${res.status} ${res.statusText}`);
+  }
+  return res.json() as Promise<T>;
+}
+
 export const api = {
   listRuns: () => apiFetch<ApiRun[]>("/runs"),
+  ingestEmail: (email: IngestEmail) => apiPost<{ queued: string }>("/ingest", email),
+  ingestFromGmail: () =>
+    apiPost<{ queued: string[]; message?: string }>("/ingest/gmail", {}),
   getRun: (id: string) => apiFetch<ApiRunDetail>(`/runs/${id}`),
   listEscalations: () => apiFetch<ApiEscalation[]>("/escalations"),
   listAgents: () => apiFetch<ApiAgent[]>("/agents"),

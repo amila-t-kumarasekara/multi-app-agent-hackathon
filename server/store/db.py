@@ -74,19 +74,35 @@ class DB:
     def seen_email(self, email_id):
         return self._x("SELECT 1 FROM runs WHERE email_id=%s", (email_id,)).fetchone() is not None
 
-    def stats(self):
+    def stats(self, exclude_email_ids=None):
+        exclude_email_ids = exclude_email_ids or []
         today_start = time.time() - (time.time() % 86400)
-        runs_today = self._x("SELECT COUNT(*) AS n FROM runs WHERE created_at >= %s", (today_start,)).fetchone()["n"]
-        terminal = self._x(
-            "SELECT state, COUNT(*) AS n FROM runs WHERE state IN ('DONE','ESCALATED','QUARANTINED','FAILED') GROUP BY state"
-        ).fetchall()
+        if exclude_email_ids:
+            runs_today = self._x(
+                "SELECT COUNT(*) AS n FROM runs WHERE created_at >= %s AND NOT (email_id = ANY(%s))",
+                (today_start, list(exclude_email_ids)),
+            ).fetchone()["n"]
+            terminal = self._x(
+                "SELECT state, COUNT(*) AS n FROM runs WHERE state IN ('DONE','ESCALATED','QUARANTINED','FAILED') "
+                "AND NOT (email_id = ANY(%s)) GROUP BY state",
+                (list(exclude_email_ids),),
+            ).fetchall()
+            in_escalation = self._x(
+                "SELECT COUNT(*) AS n FROM runs WHERE state IN ('ESCALATED','QUARANTINED') AND NOT (email_id = ANY(%s))",
+                (list(exclude_email_ids),),
+            ).fetchone()["n"]
+        else:
+            runs_today = self._x("SELECT COUNT(*) AS n FROM runs WHERE created_at >= %s", (today_start,)).fetchone()["n"]
+            terminal = self._x(
+                "SELECT state, COUNT(*) AS n FROM runs WHERE state IN ('DONE','ESCALATED','QUARANTINED','FAILED') GROUP BY state"
+            ).fetchall()
+            in_escalation = self._x(
+                "SELECT COUNT(*) AS n FROM runs WHERE state IN ('ESCALATED','QUARANTINED')"
+            ).fetchone()["n"]
         terminal_counts = {r["state"]: r["n"] for r in terminal}
         terminal_total = sum(terminal_counts.values())
         done = terminal_counts.get("DONE", 0)
         auto_resolved_pct = (done / terminal_total * 100) if terminal_total else None
-        in_escalation = self._x(
-            "SELECT COUNT(*) AS n FROM runs WHERE state IN ('ESCALATED','QUARANTINED')"
-        ).fetchone()["n"]
         avg_first_action_ms = self._x(
             "SELECT AVG(latency_ms) AS a FROM agent_calls WHERE agent = 'router'"
         ).fetchone()["a"]

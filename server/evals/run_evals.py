@@ -49,7 +49,7 @@ def main():
         orch = Orchestrator(db, ex)
         t0 = time.time()
         try:
-            ctx = orch.handle_email(case["email"])
+            ctx = orch.handle_email(case["email"], source="eval")
             if ctx.get("state") == "AWAITING_APPROVAL" and case.get("approve", True):
                 ctx = orch.handle_approval(ctx["run_id"], "approve")
             fails = check(case["expect"], ctx, db, crm, gmail, cal)

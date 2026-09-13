@@ -1,6 +1,11 @@
-export function SearchPill() {
+type SearchPillProps = {
+  value: string;
+  onChange: (value: string) => void;
+};
+
+export function SearchPill({ value, onChange }: SearchPillProps) {
   return (
-    <span className="ltc-search">
+    <label className="ltc-search">
       <svg
         width={13}
         height={13}
@@ -15,7 +20,14 @@ export function SearchPill() {
         <circle cx="11" cy="11" r="8" />
         <path d="m21 21-4.3-4.3" />
       </svg>
-      Search runs…
-    </span>
+      <input
+        type="search"
+        className="ltc-search-input"
+        placeholder="Search runs…"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label="Search runs"
+      />
+    </label>
   );
 }

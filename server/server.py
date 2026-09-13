@@ -1,6 +1,7 @@
 """FastAPI: Slack interactivity endpoint (3s ack rule) + manual triggers + run inspection + dashboard API."""
 import json, hmac, hashlib, time, os, threading
-from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
+from fastapi import FastAPI, Request, BackgroundTasks, HTTPException, Body
+from evals.case_ids import eval_email_ids, is_live_run
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from store.db import DB
@@ -40,9 +41,33 @@ async def slack_interact(req: Request, bg: BackgroundTasks):
     bg.add_task(orch.handle_approval, run_id, decision)      # do the work AFTER we ack
     return JSONResponse({"replace_original": True, "text": f"{'✅ Approved' if decision=='approve' else '⛔ Rejected'} run {run_id} by <@{payload['user']['id']}> — booking…"})
 
-@app.post("/ingest")            # manual trigger for demos / curl
-async def ingest(email: dict, bg: BackgroundTasks):
-    bg.add_task(orch.handle_email, email); return {"queued": email.get("id")}
+@app.post("/ingest")            # manual trigger for demos / curl / simulate without Gmail
+async def ingest(bg: BackgroundTasks, email: dict = Body(...)):
+    bg.add_task(orch.handle_email, email, "live")
+    return {"queued": email.get("id")}
+
+@app.post("/ingest/gmail")
+async def ingest_gmail(bg: BackgroundTasks):
+    """Pull unread inbox messages from the connected Gmail account and queue triage runs."""
+    from integrations.fakes import FakeGmail
+    if isinstance(apps.gmail, FakeGmail):
+        raise HTTPException(
+            400,
+            detail="Gmail is not connected. Complete Google OAuth or use POST /ingest with a test email.",
+        )
+    unread = apps.gmail.fetch_unread()
+    queued = []
+    for email in unread:
+        if db.seen_email(email["id"]):
+            continue
+        bg.add_task(orch.handle_email, email, "live")
+        queued.append(email["id"])
+    if not queued:
+        return {
+            "queued": [],
+            "message": "No new unread messages (already processed or inbox empty).",
+        }
+    return {"queued": queued, "message": f"Processing {len(queued)} unread email(s)…"}
 
 @app.post("/approve/{run_id}/{decision}")   # local shortcut when Slack isn't wired
 async def approve(run_id: str, decision: str):
@@ -97,12 +122,14 @@ def _summarize_run(run: dict) -> dict:
 
 @app.get("/runs")
 async def list_runs(limit: int = 200):
-    return [_summarize_run(r) for r in db.list_runs(limit)]
+    return [_summarize_run(r) for r in db.list_runs(limit) if is_live_run(r)]
 
 @app.get("/escalations")
 async def escalations():
     out = []
     for r in db.runs_in_states(["ESCALATED", "QUARANTINED"]):
+        if not is_live_run(r):
+            continue
         s = _summarize_run(r)
         s["reason"] = s["note"] or "Escalated for human review"
         s["risk"] = "High" if r["state"] == "QUARANTINED" else "Medium"
@@ -112,7 +139,7 @@ async def escalations():
 
 @app.get("/stats")
 async def stats():
-    s = db.stats()
+    s = db.stats(exclude_email_ids=list(eval_email_ids()))
     return {
         "runsToday": s["runs_today"],
         "autoResolvedPct": s["auto_resolved_pct"],

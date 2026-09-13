@@ -57,19 +57,38 @@ function buildStatCards(stats: ApiStats | null) {
 }
 
 export function FeedScreen() {
-  const { filter, setFilter, openRunDetail } = useLeadTriageNavigation();
-  const { data: runs, loading, error } = useApiData<ApiRun[]>(api.listRuns, 5000);
-  const { data: stats } = useApiData<ApiStats>(api.getStats, 5000);
+  const {
+    filter,
+    setFilter,
+    openRunDetail,
+    feedSearch,
+    setFeedSearch,
+    feedReload,
+    feedMessage,
+    setNewRunOpen,
+  } = useLeadTriageNavigation();
+  const { data: runs, loading, error } = useApiData<ApiRun[]>(api.listRuns, 5000, feedReload);
+  const { data: stats } = useApiData<ApiStats>(api.getStats, 5000, feedReload);
 
-  const filteredRuns = useMemo(
-    () => (runs ?? []).filter((run) => filter === "All runs" || run.status === filter),
-    [runs, filter],
-  );
+  const filteredRuns = useMemo(() => {
+    const q = feedSearch.trim().toLowerCase();
+    return (runs ?? []).filter((run) => {
+      if (filter !== "All runs" && run.status !== filter) return false;
+      if (!q) return true;
+      const hay = `${run.leadName} ${run.company} ${run.agent} ${run.id}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [runs, filter, feedSearch]);
 
   const statCards = buildStatCards(stats ?? null);
 
   return (
     <>
+      {feedMessage ? (
+        <div className="ltc-feed-banner" role="status">
+          {feedMessage}
+        </div>
+      ) : null}
       <div className="ltc-stats">
         {statCards.map((stat) => (
           <StatCard
@@ -98,7 +117,7 @@ export function FeedScreen() {
             {label}
           </button>
         ))}
-        <SearchPill />
+        <SearchPill value={feedSearch} onChange={setFeedSearch} />
       </div>
 
       <div className="ltc-listcard">
@@ -107,7 +126,13 @@ export function FeedScreen() {
         ) : loading && !runs ? (
           <div className="ltc-empty">Loading runs…</div>
         ) : filteredRuns.length === 0 ? (
-          <div className="ltc-empty">No runs yet. POST an email to /ingest to see one here.</div>
+          <div className="ltc-empty">
+            No live runs yet. Click <strong>New run</strong> to pull unread Gmail into the pipeline.
+            {" "}
+            <button type="button" className="ltc-linkbtn" onClick={() => setNewRunOpen(true)}>
+              Simulate a test email instead
+            </button>
+          </div>
         ) : (
           <div className="ltc-list">
             {filteredRuns.map((run) => (

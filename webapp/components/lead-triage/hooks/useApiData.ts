@@ -12,6 +12,7 @@ export type ApiDataState<T> = {
 export function useApiData<T>(
   fetcher: (() => Promise<T>) | null,
   intervalMs = 5000,
+  reloadToken = 0,
 ): ApiDataState<T> {
   const [state, setState] = useState<ApiDataState<T>>({
     data: null,
@@ -52,7 +53,7 @@ export function useApiData<T>(
       clearInterval(id);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [intervalMs, fetcher === null]);
+  }, [intervalMs, fetcher === null, reloadToken]);
 
   return state;
 }

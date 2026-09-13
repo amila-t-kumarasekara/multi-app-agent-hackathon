@@ -33,12 +33,13 @@ class Orchestrator:
         except Exception as e: return {"error": str(e)}
 
     # ---- entry point 1: new email -------------------------------------------
-    def handle_email(self, email: dict) -> dict:
+    def handle_email(self, email: dict, source: str = "live") -> dict:
         if self.db.seen_email(email["id"]):
             return {"skipped": "already_processed", "email_id": email["id"]}
         run_id = str(uuid.uuid4())[:8]
         ctx = {"run_id": run_id, "email": email, "state": State.RECEIVED.value,
-               "history": [State.RECEIVED.value], "extraction": None, "critique": None, "crm": None}
+               "history": [State.RECEIVED.value], "extraction": None, "critique": None, "crm": None,
+               "source": source}
         self.db.create_run(run_id, email["id"], ctx["state"], ctx)
         try:
             return self._process(ctx)

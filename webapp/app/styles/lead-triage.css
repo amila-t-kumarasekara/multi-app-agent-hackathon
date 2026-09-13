@@ -244,7 +244,99 @@
   border-radius: 999px;
   padding: 6px 12px;
   font-size: 12.5px;
+}
+.ltc-search-input {
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  min-width: 140px;
+  outline: none;
+}
+.ltc-search-input::placeholder {
   opacity: 0.55;
+}
+
+.ltc-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--color-text) 35%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+.ltc-modal {
+  width: min(480px, 100%);
+  background: var(--color-bg);
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+  padding: 24px;
+  box-shadow: 0 24px 48px color-mix(in srgb, var(--color-text) 12%, transparent);
+}
+.ltc-modal-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  margin: 0 0 8px;
+}
+.ltc-modal-desc {
+  margin: 0 0 20px;
+  font-size: 13px;
+  opacity: 0.65;
+  line-height: 1.45;
+}
+.ltc-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ltc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.ltc-field input,
+.ltc-field textarea {
+  font: inherit;
+  font-weight: 400;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+.ltc-modal-error {
+  color: var(--color-accent-800, #b42318);
+  font-size: 13px;
+  margin: 0;
+}
+.ltc-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.ltc-feed-banner {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--color-accent-2-100);
+  color: var(--color-accent-2-800);
+  border: 1px solid color-mix(in srgb, var(--color-accent-2-800) 15%, transparent);
+}
+.ltc-linkbtn {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--color-accent-800);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .ltc-listcard {

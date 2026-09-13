@@ -17,5 +17,36 @@ services:
       timeout: 5s
       retries: 10
 
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: lead-triage-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://leadtriage:leadtriage@postgres:5432/leadtriage
+      FRONTEND_ORIGIN: http://localhost:3000
+    env_file:
+      - path: ./server/.env
+        required: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    container_name: lead-triage-webapp
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+
 volumes:
   postgres_data:

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { NewRunModal } from "../ui/NewRunModal";
 import { MainHeader } from "./MainHeader";
 import { Sidebar } from "./Sidebar";
 
@@ -13,6 +14,7 @@ export function LeadTriageShell({ children }: LeadTriageShellProps) {
       <main className="ltc-main">
         <MainHeader />
         <div className="ltc-body">{children}</div>
+        <NewRunModal />
       </main>
     </div>
   );

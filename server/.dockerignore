@@ -1,0 +1,11 @@
+__pycache__
+*.py[cod]
+*.pyo
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+token.json
+credentials.json
+*.md
