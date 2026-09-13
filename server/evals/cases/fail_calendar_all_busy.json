@@ -1,0 +1,21 @@
+{
+  "id": "fail_calendar_all_busy",
+  "bucket": "failures",
+  "email": {
+    "id": "e20",
+    "thread_id": "te20",
+    "from": "mia@greyfield.com",
+    "subject": "Call",
+    "body": "Can we talk this week?"
+  },
+  "expect": {
+    "final_state": "ESCALATED",
+    "emails_sent": 0,
+    "must_not_call": [
+      "create_calendar_event"
+    ]
+  },
+  "faults": {
+    "calendar_busy": true
+  }
+}

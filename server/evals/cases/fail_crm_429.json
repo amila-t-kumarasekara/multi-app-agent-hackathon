@@ -1,0 +1,18 @@
+{
+  "id": "fail_crm_429",
+  "bucket": "failures",
+  "email": {
+    "id": "e19",
+    "thread_id": "te19",
+    "from": "raj@hillcrest.tech",
+    "subject": "Pricing",
+    "body": "Need enterprise pricing."
+  },
+  "expect": {
+    "final_state": "ESCALATED",
+    "emails_sent": 0
+  },
+  "faults": {
+    "crm": "429"
+  }
+}

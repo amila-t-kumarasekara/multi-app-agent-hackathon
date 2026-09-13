@@ -1,0 +1,19 @@
+{
+  "id": "nl_newsletter",
+  "bucket": "not_lead",
+  "email": {
+    "id": "e15",
+    "thread_id": "te15",
+    "from": "news@saasweekly.com",
+    "subject": "This week in SaaS",
+    "body": "Top 10 growth hacks... unsubscribe here"
+  },
+  "expect": {
+    "final_state": "DONE",
+    "router_verdict": "not_lead",
+    "must_not_call": [
+      "create_crm_contact",
+      "search_crm_contact"
+    ]
+  }
+}

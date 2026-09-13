@@ -1,0 +1,18 @@
+{
+  "id": "mal_non_english",
+  "bucket": "malformed",
+  "email": {
+    "id": "e12",
+    "thread_id": "te12",
+    "from": "jean@maisonverte.fr",
+    "subject": "Demande de d\u00e9monstration",
+    "body": "Bonjour, nous sommes une PME de 30 personnes et souhaitons une d\u00e9monstration de votre outil. Cordialement, Jean"
+  },
+  "expect": {
+    "final_state": "DONE",
+    "router_verdict": "lead",
+    "must_call": [
+      "create_crm_contact"
+    ]
+  }
+}

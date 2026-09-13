@@ -1,0 +1,26 @@
+{
+  "id": "dup_same_email_twice",
+  "bucket": "duplicates",
+  "email": {
+    "id": "e8",
+    "thread_id": "te8",
+    "from": "tom@bluecrane.com",
+    "subject": "Pricing",
+    "body": "What does it cost?"
+  },
+  "expect": {
+    "final_state": "DONE",
+    "max_contacts_created": 0
+  },
+  "app_state": {
+    "crm_contacts": [
+      {
+        "id": "c4",
+        "email": "tom@bluecrane.com",
+        "name": "Tom",
+        "company": "Blue Crane",
+        "open_deal_id": null
+      }
+    ]
+  }
+}

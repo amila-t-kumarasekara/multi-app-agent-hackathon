@@ -1,0 +1,17 @@
+{
+  "id": "mal_html_only",
+  "bucket": "malformed",
+  "email": {
+    "id": "e10",
+    "thread_id": "te10",
+    "from": "m.ruiz@lantern.health",
+    "subject": "Inquiry",
+    "body": "<html><body><p>Hello,</p><p>I run procurement at <b>Lantern Health</b>. Please send info on enterprise plans.</p></body></html>"
+  },
+  "expect": {
+    "final_state": "DONE",
+    "extraction_fields": {
+      "company": "Lantern Health"
+    }
+  }
+}
