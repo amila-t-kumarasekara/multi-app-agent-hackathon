@@ -29,8 +29,7 @@ def _verify(req_body: bytes, ts: str, sig: str):
     mine = "v0=" + hmac.new(secret.encode(), f"v0:{ts}:{req_body.decode()}".encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(mine, sig)
 
-@app.post("/slack/interact")
-async def slack_interact(req: Request, bg: BackgroundTasks):
+async def _slack_interact(req: Request, bg: BackgroundTasks):
     body = await req.body()
     if not _verify(body, req.headers.get("X-Slack-Request-Timestamp", "0"), req.headers.get("X-Slack-Signature", "")):
         raise HTTPException(401)
@@ -40,6 +39,15 @@ async def slack_interact(req: Request, bg: BackgroundTasks):
     run_id, decision = action["value"], "approve" if action["action_id"] == "approve_lead" else "reject"
     bg.add_task(orch.handle_approval, run_id, decision)      # do the work AFTER we ack
     return JSONResponse({"replace_original": True, "text": f"{'✅ Approved' if decision=='approve' else '⛔ Rejected'} run {run_id} by <@{payload['user']['id']}> — booking…"})
+
+@app.post("/slack/interact")
+async def slack_interact(req: Request, bg: BackgroundTasks):
+    return await _slack_interact(req, bg)
+
+@app.post("/slack/interactions")
+async def slack_interactions_alias(req: Request, bg: BackgroundTasks):
+    """Alias for Slack apps configured with /slack/interactions (common typo)."""
+    return await _slack_interact(req, bg)
 
 @app.post("/ingest")            # manual trigger for demos / curl / simulate without Gmail
 async def ingest(bg: BackgroundTasks, email: dict = Body(...)):
