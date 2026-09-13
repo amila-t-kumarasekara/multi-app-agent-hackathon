@@ -8,7 +8,8 @@ from tools.executor import ToolExecutor
 from integrations.factory import build_apps
 from orchestrator.machine import Orchestrator
 from orchestrator.registry import REGISTRY
-from config import FRONTEND_ORIGIN, USE_FAKES, CRM_PROVIDER, FAST_MODEL, SMART_MODEL
+from config import FRONTEND_ORIGIN, FAST_MODEL, SMART_MODEL
+from integrations.status import build_integration_list
 
 app = FastAPI()
 app.add_middleware(
@@ -153,22 +154,7 @@ async def agents():
 
 @app.get("/integrations")
 async def integrations():
-    live = not USE_FAKES
-    def item(name, icon, live_account):
-        return {
-            "name": name,
-            "icon": icon,
-            "account": live_account if live else "Demo mode (fakes) — set USE_FAKES=0 to go live",
-            "status": "Connected" if live else "Disconnected",
-            "statusClass": "tag-accent-2" if live else "tag-neutral",
-            "actionLabel": "Manage" if live else "Connect",
-        }
-    return [
-        item("Email (Gmail)", "mail", "Live Gmail account (OAuth)"),
-        item(f"CRM ({CRM_PROVIDER.title()})", "database", f"{CRM_PROVIDER.title()} — live"),
-        item("Slack", "message", "Live workspace"),
-        item("Google Calendar", "calendar", "Live calendar (OAuth)"),
-    ]
+    return build_integration_list(apps)
 
 @app.get("/evals")
 async def evals():

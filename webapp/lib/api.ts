@@ -77,6 +77,7 @@ export type ApiIntegration = {
   name: string;
   icon: string;
   account: string;
+  detail?: string;
   status: "Connected" | "Disconnected";
   statusClass: ApiTagClass;
   actionLabel: string;

@@ -35,6 +35,11 @@ export function IntegrationsScreen() {
               <div className="ltc-runinfo ltc-runinfo-grow">
                 <div className="ltc-runname">{integration.name}</div>
                 <div className="ltc-runmeta">{integration.account}</div>
+                {integration.detail ? (
+                  <div className="ltc-runmeta" style={{ marginTop: 4, opacity: 0.85 }}>
+                    {integration.detail}
+                  </div>
+                ) : null}
               </div>
               <StatusTag
                 label={integration.status}

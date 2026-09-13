@@ -47,3 +47,5 @@ build/
 *.swo
 
 credentials.json
+
+token.json
