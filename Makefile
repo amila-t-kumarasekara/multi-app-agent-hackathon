@@ -60,7 +60,11 @@ postgres: env ## Start only Postgres (for local uvicorn / yarn dev)
 	@echo "DATABASE_URL=postgresql://leadtriage:leadtriage@localhost:5432/leadtriage"
 
 dev-server: postgres ## Run API locally with uvicorn (requires pip install -r server/requirements.txt)
-	cd $(SERVER_DIR) && uvicorn server:app --reload --port 8000
+	@echo "Tip: stop Docker API if port 8000 conflicts: make stop-server"
+	cd $(SERVER_DIR) && uvicorn server:app --reload --host 127.0.0.1 --port 8000
+
+stop-server: ## Stop only the Docker API container (use with dev-server on 127.0.0.1)
+	$(COMPOSE) stop server
 
 dev-web: ## Run Next.js dev server locally (requires yarn in webapp/)
 	cd $(WEBAPP_DIR) && yarn dev

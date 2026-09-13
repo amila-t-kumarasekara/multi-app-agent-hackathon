@@ -31,6 +31,9 @@ services:
     env_file:
       - path: ./server/.env
         required: false
+    volumes:
+      # Live code + Google OAuth files from the host (for local hackathon dev)
+      - ./server:/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -40,7 +43,7 @@ services:
       context: ./webapp
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:8000
+        NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
     container_name: lead-triage-webapp
     restart: unless-stopped
     ports:
