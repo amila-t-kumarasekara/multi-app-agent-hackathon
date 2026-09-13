@@ -2,14 +2,65 @@
 import os, requests
 from tools.executor import TransientError
 
-def _check(r):
-    if r.status_code in (429, 500, 502, 503, 504): raise TransientError(f"{r.status_code} {r.text[:200]}")
-    r.raise_for_status(); return r.json()
+def _check(r, *, hint=""):
+    if r.status_code in (429, 500, 502, 503, 504):
+        raise TransientError(f"{r.status_code} {r.text[:200]}")
+    if r.status_code == 403:
+        extra = hint or r.text[:240]
+        raise RuntimeError(
+            f"HubSpot 403 Forbidden — private app token lacks permission. {extra}"
+        )
+    r.raise_for_status()
+    return r.json()
+
+HUBSPOT_DEAL_SCOPES = ("crm.objects.deals.read", "crm.objects.deals.write")
+
+
+def hubspot_token_scopes(token):
+    r = requests.get(f"https://api.hubapi.com/oauth/v1/access-tokens/{token}", timeout=10)
+    if not r.ok:
+        return None
+    return r.json().get("scopes") or []
+
 
 class HubSpotCRM:
     BASE = "https://api.hubapi.com/crm/v3/objects"
+    PIPELINES = "https://api.hubapi.com/crm/v3/pipelines/deals"
+    ASSOC_V4 = "https://api.hubapi.com/crm/v4/objects/deals"
+
     def __init__(self, token=None):
-        self.h = {"Authorization": f"Bearer {token or os.environ['HUBSPOT_TOKEN']}"}
+        self.token = token or os.environ["HUBSPOT_TOKEN"]
+        self.h = {"Authorization": f"Bearer {self.token}"}
+        self._deal_defaults = None
+
+    def _scope_hint(self):
+        scopes = hubspot_token_scopes(self.token) or []
+        missing = [s for s in HUBSPOT_DEAL_SCOPES if s not in scopes]
+        if missing:
+            return (
+                f"Token is missing scopes: {', '.join(missing)}. "
+                "In HubSpot: Private app → Scopes → save → Regenerate token → update HUBSPOT_TOKEN → restart uvicorn."
+            )
+        if scopes:
+            return f"Token has deals scopes but HubSpot still returned 403 (check Sales/Deals enabled on portal). Scopes: {', '.join(scopes[:12])}…"
+        return "Regenerate the private app token after enabling deals scopes."
+
+    def _deal_pipeline_and_stage(self):
+        if self._deal_defaults:
+            return self._deal_defaults
+        j = _check(
+            requests.get(self.PIPELINES, headers=self.h, timeout=10),
+            hint="Add scopes: crm.objects.deals.read and crm.objects.deals.write on the HubSpot private app.",
+        )
+        pipelines = j.get("results") or []
+        if not pipelines:
+            self._deal_defaults = ("default", "appointmentscheduled")
+            return self._deal_defaults
+        pipe = pipelines[0]
+        stages = pipe.get("stages") or []
+        stage_id = stages[0]["id"] if stages else "appointmentscheduled"
+        self._deal_defaults = (str(pipe["id"]), stage_id)
+        return self._deal_defaults
     def search(self, email):
         j = _check(requests.post(f"{self.BASE}/contacts/search", headers=self.h, json={
             "filterGroups": [{"filters": [{"propertyName": "email", "operator": "EQ", "value": email}]}],
@@ -33,10 +84,38 @@ class HubSpotCRM:
         j = _check(requests.patch(f"{self.BASE}/contacts/{contact_id}", headers=self.h, json={"properties": props}, timeout=10))
         return {"id": j["id"], **fields}
     def create_deal(self, a):
-        j = _check(requests.post(f"{self.BASE}/deals", headers=self.h, json={
-            "properties": {"dealname": a["title"], "dealstage": "appointmentscheduled", "pipeline": "default"},
-            "associations": [{"to": {"id": a["contact_id"]}, "types": [{"associationCategory": "HUBSPOT_DEFINED", "associationTypeId": 3}]}]}, timeout=10))
-        return {"id": j["id"], "contact_id": a["contact_id"], "title": a["title"]}
+        pipeline_id, stage_id = self._deal_pipeline_and_stage()
+        r = requests.post(
+            f"{self.BASE}/deals",
+            headers=self.h,
+            json={
+                "properties": {
+                    "dealname": a["title"],
+                    "dealstage": stage_id,
+                    "pipeline": pipeline_id,
+                },
+            },
+            timeout=10,
+        )
+        if r.status_code == 403:
+            return {
+                "id": None,
+                "contact_id": a["contact_id"],
+                "title": a["title"],
+                "deal_skipped": True,
+                "reason": self._scope_hint(),
+            }
+        j = _check(
+            r,
+            hint="Enable crm.objects.deals.read/write on the HubSpot private app and regenerate the token.",
+        )
+        deal_id = j["id"]
+        requests.put(
+            f"{self.ASSOC_V4}/{deal_id}/associations/contacts/{a['contact_id']}/3",
+            headers=self.h,
+            timeout=10,
+        )
+        return {"id": deal_id, "contact_id": a["contact_id"], "title": a["title"]}
 
 class AirtableCRM:
     def __init__(self, token=None, base=None):

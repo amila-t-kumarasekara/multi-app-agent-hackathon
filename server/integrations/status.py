@@ -3,7 +3,7 @@ import os
 import requests
 from config import USE_FAKES, CRM_PROVIDER
 from integrations.fakes import FakeCRM, FakeGmail, FakeCalendar, FakeSlack
-from integrations.crm import HubSpotCRM, AirtableCRM
+from integrations.crm import HubSpotCRM, AirtableCRM, hubspot_token_scopes, HUBSPOT_DEAL_SCOPES
 from integrations.factory import _google_mode
 
 
@@ -99,7 +99,22 @@ def _crm_status(crm):
         portal = j.get("portalId", "?")
         company = j.get("companyName") or j.get("accountType") or "HubSpot"
         account = f"{company} · portal {portal}"
-        detail = f"HubSpot portal ID {portal} · time zone {j.get('timeZone', '—')}"
+        scopes = hubspot_token_scopes(token) or []
+        missing_deals = [s for s in HUBSPOT_DEAL_SCOPES if s not in scopes]
+        pipe_r = requests.get(HubSpotCRM.PIPELINES, headers={"Authorization": f"Bearer {token}"}, timeout=10)
+        if missing_deals:
+            detail = (
+                f"Portal {portal} · token missing scopes: {', '.join(missing_deals)}. "
+                "Private app → add scopes → Save → Regenerate token → paste new HUBSPOT_TOKEN → restart uvicorn."
+            )
+            return _item(label, "database", account, False, detail)
+        if not pipe_r.ok:
+            detail = (
+                f"Portal {portal} · deals pipelines HTTP {pipe_r.status_code} — "
+                f"regenerate token after scopes. {pipe_r.text[:100]}"
+            )
+            return _item(label, "database", account, False, detail)
+        detail = f"Portal {portal} · scopes include deals · {len(pipe_r.json().get('results') or [])} pipeline(s) · tz {j.get('timeZone', '—')}"
         return _item(label, "database", account, True, detail)
     if isinstance(crm, AirtableCRM):
         base = os.getenv("AIRTABLE_BASE", "")
